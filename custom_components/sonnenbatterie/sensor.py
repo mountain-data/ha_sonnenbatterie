@@ -57,7 +57,7 @@ async def async_setup_entry(hass, config_entry,async_add_entities):
 
 
 class SonnenBatterieSensor(SensorEntity):
-    def __init__(self,id,name=None,state_class:str=None):
+    def __init__(self,id,name=None,state_class:str=None, update_tinervall_s : int = None):
         self._attributes = {}
         self._state ="NOTRUN"
         self.entity_id=id
@@ -69,24 +69,29 @@ class SonnenBatterieSensor(SensorEntity):
         else:
             self.reset = False
         self.last_update = datetime.now()
+        self.update_tinervall_s = update_tinervall_s
         LOGGER.warning("Create Sensor {0}".format(id))
+
+    def _passed_midnight(delta=1)->bool:
+        time_now = datetime.now()
+        time_ago = time_now - timedelta(seconds=delta)
+        return time_now.date() != time_ago.date()
 
     def set_state(self, state):
         """Set the state."""
         if self.state_class == 'total_increasing':
             delta_t = datetime.now() - self.last_update
             delta_t_s = delta_t.total_seconds()
-            LOGGER.warning(f"Delta t = {delta_t_s} / {delta_t}")
-            LOGGER.warning((self._state))
-            LOGGER.warning((state))
-            try:
-                old_val = int(self._state)
-            except:
-                old_val = 0
-            self._state = old_val + state*delta_t_s
+            if self._passed_midnight(delta = self.update_tinervall_s):
+                self._state = state*delta_t_s
+            else:
+                try:
+                    old_val = int(self._state)
+                except:
+                    old_val = 0
+                self._state = old_val + state*delta_t_s
             self.last_update = datetime.now()
         else:
-            self.last_update = datetime.now()
             if self._state==state:
                 return
             self._state = state
@@ -251,7 +256,7 @@ class SonnenBatterieMonitor:
             sensor=self.meterSensors[id]
             sensor.set_state(value)
         else:
-            sensor=SonnenBatterieSensor(id,friendlyname,state_class)
+            sensor=SonnenBatterieSensor(id,friendlyname,state_class, self.updateIntervalSeconds)
             sensor.set_attributes({"unit_of_measurement":unit,"device_class":device_class,"friendly_name":friendlyname,"state_class":state_class})
             self.async_add_entities([sensor])
             self.meterSensors[id]=sensor
