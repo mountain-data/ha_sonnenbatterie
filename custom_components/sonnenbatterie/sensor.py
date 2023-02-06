@@ -79,7 +79,11 @@ class SonnenBatterieSensor(SensorEntity):
             LOGGER.warning(f"Delta t = {delta_t_s} / {delta_t}")
             LOGGER.warning(type(self._state))
             LOGGER.warning(type(state))
-            self._state = int(self._state) + state*delta_t_s
+            try:
+                old_val = int(self._state)
+            except:
+                old_val = 0
+            self._state = old_val + state*delta_t_s
             self.last_update = datetime.now()
         else:
             self.last_update = datetime.now()
