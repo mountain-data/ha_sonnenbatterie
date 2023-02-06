@@ -64,7 +64,7 @@ class SonnenBatterieSensor(SensorEntity):
         if name is None:
             name=id
         self._name=name
-        if state_class == 'total_increasing'
+        if state_class == 'total_increasing':
             self.reset = datetime.now()
         else:
             self.reset = False
