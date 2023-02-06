@@ -77,8 +77,8 @@ class SonnenBatterieSensor(SensorEntity):
             delta_t = datetime.now() - self.last_update
             delta_t_s = delta_t.total_seconds()
             LOGGER.warning(f"Delta t = {delta_t_s} / {delta_t}")
-            LOGGER.warning(type(self._state))
-            LOGGER.warning(type(state))
+            LOGGER.warning((self._state))
+            LOGGER.warning((state))
             try:
                 old_val = int(self._state)
             except:
