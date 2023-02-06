@@ -226,14 +226,14 @@ class SonnenBatterieMonitor:
         """
         #self.sensor.set_attributes(attr)
 
-    def _AddOrUpdateEntity(self,id,friendlyname,value,unit,device_class):
+    def _AddOrUpdateEntity(self,id,friendlyname,value,unit,device_class,state_class:str='measurement'):
         if id in self.meterSensors:
             sensor=self.meterSensors[id]
             #sensor.set_attributes({"unit_of_measurement":unit,"device_class":"power","friendly_name":friendlyname})
             sensor.set_state(value)
         else:
             sensor=SonnenBatterieSensor(id,friendlyname)
-            sensor.set_attributes({"unit_of_measurement":unit,"device_class":device_class,"friendly_name":friendlyname,"state_class":"measurement"})
+            sensor.set_attributes({"unit_of_measurement":unit,"device_class":device_class,"friendly_name":friendlyname,"state_class":state_class})
             self.async_add_entities([sensor])
             self.meterSensors[id]=sensor
 
@@ -247,7 +247,7 @@ class SonnenBatterieMonitor:
 
         """systemdata defines the serialnumber of the battery"""
         serial=systemdata["DE_Ticket_Number"]
-        allSensorsPrefix="sensor."+DOMAIN+"_"+serial+"_"
+        allSensorsPrefix="sensor.bb_"+DOMAIN+"_"+serial+"_"
 
         """this and that from the states"""
         if not "state_netfrequency" in self.disabledSensors:
@@ -464,6 +464,11 @@ class SonnenBatterieMonitor:
         unitname="W"
         friendlyname="Grid In/Out Power"
         self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.POWER)
+
+        sensorname=allSensorsPrefix+"state_grid_inout_energy"
+        unitname="Wh"
+        friendlyname="Grid In/Out Energy"
+        self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
         """battery states"""
         """battery load percent"""
