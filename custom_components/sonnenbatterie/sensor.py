@@ -74,10 +74,12 @@ class SonnenBatterieSensor(SensorEntity):
     def set_state(self, state):
         """Set the state."""
         if self.state_class == 'total_increasing':
-            LOGGER.warning(f"Delta t = {self.last_update - datetime.now()}")
+            delta_t = datetime.now() - self.last_update
+            delta_t_s = delta_t.total_seconds()
+            LOGGER.warning(f"Delta t = {delta_t_s} / {delta_t}")
             LOGGER.warning(type(self._state))
             LOGGER.warning(type(state))
-            #self._state = self._state + state*(self.last_update - datetime.now())
+            self._state = int(self._state) + state*delta_t_s
             self.last_update = datetime.now()
         else:
             self.last_update = datetime.now()
@@ -350,19 +352,19 @@ class SonnenBatterieMonitor:
         self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.POWER)
 
         sensorname=allSensorsPrefix+"state_grid_inout_energy"
-        unitname="Wh"
+        unitname="Ws"
         friendlyname="Grid In/Out Energy"
         self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
 
         sensorname=allSensorsPrefix+"state_grid_out_energy"
-        unitname="Wh"
+        unitname="Ws"
         friendlyname="Grid Output Energy (sell)"
         self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
 
         sensorname=allSensorsPrefix+"state_grid_in_energy"
-        unitname="Wh"
+        unitname="Ws"
         friendlyname="Grid Input Energy (buy)"
         self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
