@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry,async_add_entities):
     serial=systemdata["DE_Ticket_Number"]
     LOGGER.info("{0} - INTERVAL: {1}".format(DOMAIN,updateIntervalSeconds))
 
-    sensor = SonnenBatterieSensor(id="sensor.{0}_{1}".format(DOMAIN,serial))
+    sensor = SonnenBatterieSensor(id="sensor.bb_{0}_{1}".format(DOMAIN,serial))
     async_add_entities([sensor])
 
     monitor = SonnenBatterieMonitor(hass,sonnenInst, sensor, async_add_entities,updateIntervalSeconds,debug_mode)
@@ -57,28 +57,37 @@ async def async_setup_entry(hass, config_entry,async_add_entities):
 
 
 class SonnenBatterieSensor(SensorEntity):
-    def __init__(self,id,name=None):
+    def __init__(self,id,name=None,state_class:Str=None):
         self._attributes = {}
         self._state ="NOTRUN"
         self.entity_id=id
         if name is None:
             name=id
         self._name=name
+        if state_class == 'total_increasing'
+            self.reset = datetime.now()
+        else:
+            self.reset = False
+        self.last_update = datetime.now()
         LOGGER.info("Create Sensor {0}".format(id))
 
     def set_state(self, state):
         """Set the state."""
-        if self._state==state:
-            return
-        self._state = state
+        if self.state_class == 'total_increasing':
+            LOGGER.info(f"Delta t = {self.last_update - datetime.now()}")
+            self._state = self._state + state*(self.last_update - datetime.now())
+            self.last_update = datetime.now()
+        else:
+            self.last_update = datetime.now()
+            if self._state==state:
+                return
+            self._state = state
+
+
         try:
             self.schedule_update_ha_state()
         except:
             LOGGER.error("Failing sensor: "+self.name)
-
-    def get_state(self):
-        """Set the state."""
-        return self._state
 
     def set_attributes(self, attributes):
         """Set the state attributes."""
@@ -232,13 +241,9 @@ class SonnenBatterieMonitor:
     def _AddOrUpdateEntity(self,id,friendlyname,value,unit,device_class,state_class:str='measurement'):
         if id in self.meterSensors:
             sensor=self.meterSensors[id]
-            if state_class == 'total_increasing':
-                # we need to do some integration
-                sensor.set_state(sensor.get_value()+5)
-            else:
-                sensor.set_state(value)
+            sensor.set_state(value)
         else:
-            sensor=SonnenBatterieSensor(id,friendlyname)
+            sensor=SonnenBatterieSensor(id,friendlyname,state_class)
             sensor.set_attributes({"unit_of_measurement":unit,"device_class":device_class,"friendly_name":friendlyname,"state_class":state_class})
             self.async_add_entities([sensor])
             self.meterSensors[id]=sensor
@@ -448,25 +453,6 @@ class SonnenBatterieMonitor:
         self._AddOrUpdateEntity(sensorname,friendlyname,int(calc_remainingcapacity_usable),unitname,SensorDeviceClass.ENERGY)
 
         """end battery states"""
-
-        """powermeter values"""
-        for meter in meters:
-            sensornamePrefix=allSensorsPrefix+"meter_"+("{0}_{1}_{2}".format( meter['direction'],meter['deviceid'],meter['channel']))
-            sensornamePrefix=sensornamePrefix.lower()
-            generateSensorsFor={"w_l1","w_l2","w_l3","v_l1_n","v_l2_n","v_l3_n","v_l1_l2","v_l2_l3","v_l3_l1","w_total","a_l1","a_l2","a_l3"}
-
-            for sensormeter in generateSensorsFor:
-                sensorname=sensornamePrefix+"_"+sensormeter
-                val=meter[sensormeter]
-                val=round(val,2)
-                unitname=(sensormeter[0]+"").upper()
-                device_class=SensorDeviceClass.POWER
-                if(unitname=="V"):
-                    device_class=SensorDeviceClass.VOLTAGE
-                elif unitname=="A":
-                    device_class=SensorDeviceClass.CURRENT
-                friendlyname="{0} {1}".format(meter['direction'],sensormeter)
-                self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,device_class)
 
     def SendAllDataToLog(self):
         """
