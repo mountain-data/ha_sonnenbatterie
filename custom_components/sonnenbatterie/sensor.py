@@ -364,13 +364,13 @@ class SonnenBatterieMonitor:
         sensorname=allSensorsPrefix+"state_grid_out_energy"
         unitname="Ws"
         friendlyname="Grid Output Energy (sell)"
-        self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
+        self._AddOrUpdateEntity(sensorname,friendlyname,val_out,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
 
         sensorname=allSensorsPrefix+"state_grid_in_energy"
         unitname="Ws"
         friendlyname="Grid Input Energy (buy)"
-        self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
+        self._AddOrUpdateEntity(sensorname,friendlyname,val_in,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
         """battery states"""
         """battery load percent"""
