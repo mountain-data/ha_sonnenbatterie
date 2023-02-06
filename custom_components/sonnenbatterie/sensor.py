@@ -57,7 +57,7 @@ async def async_setup_entry(hass, config_entry,async_add_entities):
 
 
 class SonnenBatterieSensor(SensorEntity):
-    def __init__(self,id,name=None,state_class:Str=None):
+    def __init__(self,id,name=None,state_class:str=None):
         self._attributes = {}
         self._state ="NOTRUN"
         self.entity_id=id
