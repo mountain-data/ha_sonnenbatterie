@@ -75,7 +75,10 @@ class SonnenBatterieSensor(SensorEntity):
             self.schedule_update_ha_state()
         except:
             LOGGER.error("Failing sensor: "+self.name)
-            #raise
+
+    def get_state(self):
+        """Set the state."""
+        return self._state
 
     def set_attributes(self, attributes):
         """Set the state attributes."""
@@ -229,13 +232,20 @@ class SonnenBatterieMonitor:
     def _AddOrUpdateEntity(self,id,friendlyname,value,unit,device_class,state_class:str='measurement'):
         if id in self.meterSensors:
             sensor=self.meterSensors[id]
-            #sensor.set_attributes({"unit_of_measurement":unit,"device_class":"power","friendly_name":friendlyname})
-            sensor.set_state(value)
+            if state_class == 'total_increasing':
+                # we need to do some integration
+                sensor.set_state(sensor.get_value()+5)
+            else:
+                sensor.set_state(value)
         else:
             sensor=SonnenBatterieSensor(id,friendlyname)
             sensor.set_attributes({"unit_of_measurement":unit,"device_class":device_class,"friendly_name":friendlyname,"state_class":state_class})
             self.async_add_entities([sensor])
             self.meterSensors[id]=sensor
+            if state_class == 'total_increasing':
+                sensor.set_state(0)
+            else:
+                sensor.set_state(value)
 
     def AddOrUpdateEntities(self):
         meters= self.latestData["powermeter"]
@@ -275,139 +285,6 @@ class SonnenBatterieMonitor:
                 )
 
             # except:
-
-        if not "inverter_ppv" in self.disabledSensors:
-            val_found = True
-            if 'ppv' in battery_system['grid_information']:
-                val=battery_system['grid_information']['ppv']
-            elif 'ppv' in inverter['status']:
-                val=inverter['status']['ppv']
-            else:
-                self.disabledSensors.append("inverter_ppv")
-                val_found = False
-                LOGGER.warning("No 'ppv' in inverter -> sensor disabled")
-                if self.debug:
-                    self.SendAllDataToLog()
-
-            if val_found:
-                self._AddOrUpdateEntity(
-                    allSensorsPrefix+"inverter_ppv",
-                    "Inverter PPV1 - Hybrid Solar Power PPV1",
-                    val,
-                    "W",
-                    SensorDeviceClass.POWER#"power"
-                )
-
-        if not "inverter_ppv2" in self.disabledSensors:
-            val_found = True
-            if 'ppv2' in battery_system['grid_information']:
-                val=battery_system['grid_information']['ppv2']
-            elif 'ppv2' in inverter['status']:
-                val=inverter['status']['ppv2']
-            else:
-                self.disabledSensors.append("inverter_ppv2")
-                val_found = False
-                LOGGER.warning("No 'ppv2' in inverter -> sensor disabled")
-                if self.debug:
-                    self.SendAllDataToLog()
-
-            if val_found:
-                self._AddOrUpdateEntity(
-                    allSensorsPrefix+"inverter_ppv2",
-                    "Inverter PPV2 - Hybrid Solar Power PPV2",
-                    val,
-                    "W",
-                    SensorDeviceClass.POWER
-                )
-
-        if not "inverter_ipv" in self.disabledSensors:
-            val_found = True
-            if 'ipv' in battery_system['grid_information']:
-                val = battery_system['grid_information']['ipv']
-            elif 'ipv' in inverter['status']:
-                val=inverter['status']['ipv']
-            else:
-                self.disabledSensors.append("inverter_ipv")
-                val_found = False
-                LOGGER.warning("No 'ipv' in inverter -> sensor disabled")
-                if self.debug:
-                    self.SendAllDataToLog()
-
-            if val_found:
-                self._AddOrUpdateEntity(
-                    allSensorsPrefix+"inverter_ipv",
-                    "Inverter IPV - Current IPV",
-                    val,
-                    "A",
-                    SensorDeviceClass.CURRENT
-                )
-
-
-        if not "inverter_ipv2" in self.disabledSensors:
-            val_found = True
-            if 'ipv2' in battery_system['grid_information']:
-                val = battery_system['grid_information']['ipv2']
-            elif 'ipv2' in inverter['status']:
-                val=inverter['status']['ipv2']
-            else:
-                self.disabledSensors.append("inverter_ipv2")
-                val_found = False
-                LOGGER.warning("No 'ipv2' in inverter -> sensor disabled")
-                if self.debug:
-                    self.SendAllDataToLog()
-
-            if val_found:
-                self._AddOrUpdateEntity(
-                    allSensorsPrefix+"inverter_ipv2",
-                    "Inverter IPV - Current IPV2",
-                    val,
-                    "A",
-                    SensorDeviceClass.CURRENT
-                )
-
-        if not "inverter_upv" in self.disabledSensors:
-            val_found = True
-            if 'upv' in battery_system['grid_information']:
-                val = battery_system['grid_information']['upv']
-            elif 'upv' in inverter['status']:
-                val=inverter['status']['upv']
-            else:
-                self.disabledSensors.append("inverter_upv")
-                val_found = False
-                LOGGER.warning("No 'upv' in inverter -> sensor disabled")
-                if self.debug:
-                    self.SendAllDataToLog()
-
-            if val_found:
-                self._AddOrUpdateEntity(
-                    allSensorsPrefix+"inverter_upv",
-                    "Inverter IPV - Voltage UPV",
-                    val,
-                    "V",
-                    SensorDeviceClass.VOLTAGE
-                )
-
-        if not "inverter_upv2" in self.disabledSensors:
-            val_found = True
-            if 'upv2' in battery_system['grid_information']:
-                val = battery_system['grid_information']['upv2']
-            elif 'upv2' in inverter['status']:
-                val=inverter['status']['upv2']
-            else:
-                self.disabledSensors.append("inverter_upv2")
-                val_found = False
-                LOGGER.warning("No 'upv2' in inverter -> sensor disabled")
-                if self.debug:
-                    self.SendAllDataToLog()
-
-            if val_found:
-                self._AddOrUpdateEntity(
-                    allSensorsPrefix+"inverter_upv2",
-                    "Inverter IPV - Voltage UPV2",
-                    val,
-                    "V",
-                    SensorDeviceClass.VOLTAGE
-                )
 
         """whatever comes next"""
         val_modulecount=int(battery_system['modules'])
@@ -468,6 +345,18 @@ class SonnenBatterieMonitor:
         sensorname=allSensorsPrefix+"state_grid_inout_energy"
         unitname="Wh"
         friendlyname="Grid In/Out Energy"
+        self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
+
+
+        sensorname=allSensorsPrefix+"state_grid_out_energy"
+        unitname="Wh"
+        friendlyname="Grid Output Energy (sell)"
+        self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
+
+
+        sensorname=allSensorsPrefix+"state_grid_in_energy"
+        unitname="Wh"
+        friendlyname="Grid Input Energy (buy)"
         self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
         """battery states"""
