@@ -101,11 +101,11 @@ class SonnenBatterieSensor(SensorEntity):
             self._state = state
 
 
-        try:
-            self.schedule_update_ha_state()
-        except Exception as e:
-            LOGGER.error("Failing sensor for failed HA status update: "+self.name)
-            LOGGER.error(e)
+        #try:
+        self.schedule_update_ha_state()
+        #except Exception as e:
+        #    LOGGER.error("Failing sensor for failed HA status update: "+self.name)
+        #    LOGGER.error(e)
 
     def set_attributes(self, attributes):
         """Set the state attributes."""
