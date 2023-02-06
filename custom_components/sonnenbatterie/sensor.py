@@ -69,12 +69,12 @@ class SonnenBatterieSensor(SensorEntity):
         else:
             self.reset = False
         self.last_update = datetime.now()
-        LOGGER.info("Create Sensor {0}".format(id))
+        LOGGER.warning("Create Sensor {0}".format(id))
 
     def set_state(self, state):
         """Set the state."""
         if self.state_class == 'total_increasing':
-            LOGGER.info(f"Delta t = {self.last_update - datetime.now()}")
+            LOGGER.warning(f"Delta t = {self.last_update - datetime.now()}")
             self._state = self._state + state*(self.last_update - datetime.now())
             self.last_update = datetime.now()
         else:
