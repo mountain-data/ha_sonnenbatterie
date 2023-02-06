@@ -56,6 +56,12 @@ async def async_setup_entry(hass, config_entry,async_add_entities):
     return True
 
 
+
+def passed_midnight(delta=1)->bool:
+    time_now = datetime.now()
+    time_ago = time_now - timedelta(seconds=delta)
+    return time_now.date() != time_ago.date()
+
 class SonnenBatterieSensor(SensorEntity):
     def __init__(self,id,name=None,state_class:str=None, update_tinervall_s : int = None):
         self._attributes = {}
@@ -72,17 +78,13 @@ class SonnenBatterieSensor(SensorEntity):
         self.update_tinervall_s = update_tinervall_s
         LOGGER.warning("Create Sensor {0}".format(id))
 
-    def _passed_midnight(delta=1)->bool:
-        time_now = datetime.now()
-        time_ago = time_now - timedelta(seconds=delta)
-        return time_now.date() != time_ago.date()
 
     def set_state(self, state):
         """Set the state."""
         if self.state_class == 'total_increasing':
             delta_t = datetime.now() - self.last_update
             delta_t_s = delta_t.total_seconds()
-            if self._passed_midnight(delta = self.update_tinervall_s):
+            if passed_midnight(delta = self.update_tinervall_s):
                 self._state = state*delta_t_s
             else:
                 try:
