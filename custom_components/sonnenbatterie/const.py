@@ -10,7 +10,7 @@ from homeassistant.const import (
 )
 LOGGER = logging.getLogger(__package__)
 
-DOMAIN = "sonnenbatterie"
+DOMAIN = "sonnenbatterie_bb"
 DEFAULT_SCAN_INTERVAL = 10
 
 CONFIG_SCHEMA_A=vol.Schema(
@@ -28,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-ATTR_SONNEN_DEBUG = "sonnenbatterie_debug"
+ATTR_SONNEN_DEBUG = "sonnenbatterie_bb_debug"
 DEFAULT_SONNEN_DEBUG = False
 
 def flattenObj(prefix,seperator,obj):
