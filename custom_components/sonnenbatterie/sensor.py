@@ -32,6 +32,8 @@ async def async_setup_entry(hass, config_entry,async_add_entities):
     password=config_entry.data.get(CONF_PASSWORD)
     ipaddress=config_entry.data.get(CONF_IP_ADDRESS)
     updateIntervalSeconds=config_entry.options.get(CONF_SCAN_INTERVAL)
+    if updateIntervalSeconds is None:
+        updateIntervalSeconds=10 # default value
     debug_mode=config_entry.options.get(ATTR_SONNEN_DEBUG)
     def _internal_setup(_username,_password,_ipaddress):
         return sonnenbatterie(_username,_password,_ipaddress)
@@ -173,6 +175,7 @@ class SonnenBatterieMonitor:
         #self.setupEntities()
         self.debug=debug_mode
         self.fullLogsAlreadySent = False
+        LOGGER.warning(f'self.updateIntervalSeconds = {self.updateIntervalSeconds}')
 
     def start(self):
         threading.Thread(target=self.watcher).start()
@@ -215,8 +218,6 @@ class SonnenBatterieMonitor:
             except:
                 e = traceback.format_exc()
                 LOGGER.error(e)
-            if self.updateIntervalSeconds is None:
-                self.updateIntervalSeconds=10
 
             time.sleep(max(1,self.updateIntervalSeconds))
 
@@ -258,7 +259,7 @@ class SonnenBatterieMonitor:
             sensor=self.meterSensors[id]
             sensor.set_state(value)
         else:
-            sensor=SonnenBatterieSensor(id,friendlyname,state_class, self.updateIntervalSeconds)
+            sensor=SonnenBatterieSensor(id,friendlyname,state_class, update_tinervall_s=self.updateIntervalSeconds)
             sensor.set_attributes({"unit_of_measurement":unit,"device_class":device_class,"friendly_name":friendlyname,"state_class":state_class})
             self.async_add_entities([sensor])
             self.meterSensors[id]=sensor
