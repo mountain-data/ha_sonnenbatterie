@@ -1,11 +1,11 @@
 {
-    "domain": "sonnenbatterie",
-    "name": "Sonnenbatterie",
+    "domain": "sonnenbatterie_bb",
+    "name": "Sonnenbatterie BB",
     "documentation": "https://github.com/weltmeyer/ha_sonnenbatterie",
     "dependencies": [],
     "codeowners": ["@weltmeyer"],
     "requirements": ["requests","sonnenbatterie>=0.1.1"],
     "config_flow": true,
-    "version": "2020.06.07",
+    "version": "2023.01.01",
     "iot_class": "local_polling"
 }
