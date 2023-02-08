@@ -71,26 +71,40 @@ class SonnenBatterieSensor(SensorEntity):
         self.last_update = datetime.now()
         LOGGER.info("Create Sensor {0}".format(id))
 
+    @staticmethod
+    def mignight_passed(old_time : datetime) -> bool:
+        """ did midnight pass since the last update?"""
+        days = (datetime.now().date() - old_time.date()).days
+        LOGGER.warning(f'{days} days since last update')
+        if days > 0:
+            return True
+        else:
+            return False
+
     def set_state(self, state):
         """Set the state."""
 
         if self.state_class == 'total_increasing':
-            delta_t_h = (datetime.now() - self.last_update).total_seconds()/3600
-            try:
-                old_value = float(self._state)
-            except:
-                old_value = 0
-                LOGGER.warning(f"Old value not a number")
+            if self.mignight_passed(self.last_update):
+                self._state = 0
+                LOGGER.warning(f'Reset total sensor {self.name}')
+            else:
+                delta_t_h = (datetime.now() - self.last_update).total_seconds()/3600
+                try:
+                    old_value = float(self._state)
+                except:
+                    old_value = 0
+                    LOGGER.warning(f"Old value not a number")
 
-            try:
-                new_value = float(state)
-            except:
-                new_value = 0
-                LOGGER.warning(f"New value not a number")
+                try:
+                    new_value = float(state)
+                except:
+                    new_value = 0
+                    LOGGER.warning(f"New value not a number")
 
-            if new_value==0 and old_value != 0:
-                return
-            self._state = (new_value*delta_t_h) + old_value
+                if new_value==0 and old_value != 0:
+                    return
+                self._state = (new_value*delta_t_h) + old_value
 
         else:
             if self._state==state:
@@ -341,23 +355,23 @@ class SonnenBatterieMonitor:
 
         sensorname=allSensorsPrefix+"state_grid_inout_energy"
         unitname="Wh"
-        friendlyname="Grid In/Out Energy"
+        friendlyname="Grid In/Out Energy (day)"
         self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
         sensorname=allSensorsPrefix+"state_grid_out_energy"
         unitname="Wh"
-        friendlyname="Grid Output Energy (sell)"
+        friendlyname="Grid Output Energy (sell) (day)"
         self._AddOrUpdateEntity(sensorname,friendlyname,val_out,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
         sensorname=allSensorsPrefix+"state_grid_in_energy"
         unitname="Wh"
-        friendlyname="Grid Input Energy (buy)"
+        friendlyname="Grid Input Energy (buy) (day)"
         self._AddOrUpdateEntity(sensorname,friendlyname,val_in,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
         val=status['Production_W']
         sensorname=allSensorsPrefix+"pv_energy_produced"
         unitname="Wh"
-        friendlyname="PV Energy produced"
+        friendlyname="PV Energy produced (day)"
         self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
         sensorname=allSensorsPrefix+"pv_power_produced"
@@ -405,17 +419,17 @@ class SonnenBatterieMonitor:
 
         sensorname=allSensorsPrefix+"battery_energy_input"
         unitname="Wh"
-        friendlyname="Battery Energy In"
+        friendlyname="Battery Energy In (day)"
         self._AddOrUpdateEntity(sensorname,friendlyname,val_in,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
         sensorname=allSensorsPrefix+"batterie_energy_output"
         unitname="Wh"
-        friendlyname="Battery Energy Out"
+        friendlyname="Battery Energy Out (day)"
         self._AddOrUpdateEntity(sensorname,friendlyname,val_out,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
         sensorname=allSensorsPrefix+"batterie_energy_inout"
         unitname="Wh"
-        friendlyname="Battery Energy In/Out"
+        friendlyname="Battery Energy In/Out (day)"
         self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
 
@@ -471,8 +485,6 @@ class SonnenBatterieMonitor:
         self._AddOrUpdateEntity(sensorname,friendlyname,int(calc_remainingcapacity_usable),unitname,SensorDeviceClass.ENERGY)
 
         """end battery states"""
-
-
 
     def SendAllDataToLog(self):
         """
