@@ -38,9 +38,9 @@ class SonnenbatterieFlowHandler(config_entries.ConfigFlow,domain=DOMAIN):
 
 
         try:
-            def _internal_setup(_username,_password,_ipaddress):
-                return sonnenbatterie(_username,_password,_ipaddress)
-            sonnenInst=await self.hass.async_add_executor_job(_internal_setup,username,password,ipaddress);
+            def _internal_setup(_username,_password,_ipaddress, _time_zone):
+                return sonnenbatterie(_username,_password,_ipaddress, _time_zone)
+            sonnenInst=await self.hass.async_add_executor_job(_internal_setup,username,password,ipaddress,time_zone);
         except:
             e = traceback.format_exc()
             LOGGER.error("Unable to connect to sonnenbatterie: %s", e)
