@@ -6,18 +6,21 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_IP_ADDRESS,
-    CONF_SCAN_INTERVAL
+    CONF_SCAN_INTERVAL,
+    CONF_TIME_ZONE
 )
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "sonnenbatterie_bb"
 DEFAULT_SCAN_INTERVAL = 10
+DEFAULTTIME_ZONE = 'Europe/Berlin'
 
 CONFIG_SCHEMA_A=vol.Schema(
             {
                 vol.Required(CONF_USERNAME): vol.In(["User", "Installer"]),
                 vol.Required(CONF_PASSWORD): str,
                 vol.Required(CONF_IP_ADDRESS): str,
+                vol.Required(CONF_TIME_ZONE): vol.In(['Europe/Berlin', 'Europe/Dublin']),
             }
 )
 

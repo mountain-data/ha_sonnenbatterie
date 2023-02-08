@@ -34,22 +34,16 @@ class SonnenbatterieFlowHandler(config_entries.ConfigFlow,domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         ipaddress=user_input[CONF_IP_ADDRESS]
+        time_zone=user_input[CONF_TIME_ZONE]
 
 
         try:
-            def _internal_setup(_username,_password,_ipaddress):
-                return sonnenbatterie(_username,_password,_ipaddress)
-            sonnenInst=await self.hass.async_add_executor_job(_internal_setup,username,password,ipaddress);
-            #sonnenbatterie(username,password,ipaddress)
-            #await self.hass.async_add_executor_job(
-            #    Abode, username, password, True, True, True, cache
-            #)
-
+            def _internal_setup(_username,_password,_ipaddress, _time_zone):
+                return sonnenbatterie(_username,_password,_ipaddress, _time_zone)
+            sonnenInst=await self.hass.async_add_executor_job(_internal_setup,username,password,ipaddress,time_zone);
         except:
             e = traceback.format_exc()
             LOGGER.error("Unable to connect to sonnenbatterie: %s", e)
-            #if ex.errcode == 400:
-            #    return self._show_form({"base": "invalid_credentials"})
             return self._show_form({"base": "connection_error"})
 
         return self.async_create_entry(
@@ -58,6 +52,7 @@ class SonnenbatterieFlowHandler(config_entries.ConfigFlow,domain=DOMAIN):
                 CONF_USERNAME: username,
                 CONF_PASSWORD: password,
                 CONF_IP_ADDRESS: ipaddress,
+                CONF_TIME_ZONE: time_zone,
             },
         )
 

@@ -14,7 +14,8 @@
                     "password": "Passwort",
                     "username": "Nutzername(user/installer)",
                     "ip_address": "IP-Adresse",
-                    "scan_interval": "Aktualisierungsinterval(Sekunden)"
+                    "scan_interval": "Aktualisierungsinterval(Sekunden)",
+                    "time_zone": "Zeitzone"
                 },
                 "title": "Gib deine Sonnenbatterie-Anmeldeinformationen ein"
             }
@@ -27,6 +28,7 @@
             "init":{
                 "data":{
                     "scan_interval": "Aktualisierungsinterval(Sekunden)",
+                    "time_zone": "Zeitzone",
                     "sonnenbatterie_debug": "Debug-Modus (mehr Logs)"
                 }
             }

@@ -1,16 +1,12 @@
 import traceback
 from datetime import datetime
-import sys
+
 # pylint: disable=unused-wildcard-import
 from .const import *
 # pylint: enable=unused-wildcard-import
 import threading
 import time
-#from dateutil import tz
-#to_zone = tz.gettz('Europe/Berlin')
-
-from zoneinfo import ZoneInfo
-localtz = ZoneInfo('localtime')
+from dateutil import tz
 
 from homeassistant.helpers import config_validation as cv
 
@@ -29,6 +25,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     EVENT_HOMEASSISTANT_STOP,
     CONF_SCAN_INTERVAL,
+    CONF_TIME_ZONE
 )
 
 async def async_setup_entry(hass, config_entry,async_add_entities):
@@ -38,7 +35,8 @@ async def async_setup_entry(hass, config_entry,async_add_entities):
     password=config_entry.data.get(CONF_PASSWORD)
     ipaddress=config_entry.data.get(CONF_IP_ADDRESS)
     updateIntervalSeconds=config_entry.options.get(CONF_SCAN_INTERVAL)
-    debug_mode=config_entry.options.get(ATTR_SONNEN_DEBUG)
+    time_zone=config_entry.options.get(CONF_TIME_ZONE)
+    debug_mode=config_entry.options.get(CONF_TIME_ZONE)
     def _internal_setup(_username,_password,_ipaddress):
         return sonnenbatterie(_username,_password,_ipaddress)
     sonnenInst=await hass.async_add_executor_job(_internal_setup,username,password,ipaddress);
@@ -49,7 +47,7 @@ async def async_setup_entry(hass, config_entry,async_add_entities):
     sensor = SonnenBatterieSensor(id="sensor.bb_{0}_{1}".format(DOMAIN,serial))
     async_add_entities([sensor])
 
-    monitor = SonnenBatterieMonitor(hass,sonnenInst, sensor, async_add_entities,updateIntervalSeconds,debug_mode)
+    monitor = SonnenBatterieMonitor(hass,sonnenInst, sensor, async_add_entities,updateIntervalSeconds,debug_mode, )
     hass.data[DOMAIN][config_entry.entry_id]={"monitor":monitor}
     monitor.start()
 
@@ -63,25 +61,25 @@ async def async_setup_entry(hass, config_entry,async_add_entities):
 
 
 class SonnenBatterieSensor(SensorEntity):
-    def __init__(self,id,name=None,state_class:str=None):
+    def __init__(self,id,name=None,state_class:str=None, localtz = tz.gettz('Europe/Berlin')):
         self._attributes = {}
         self._state ="NOTRUN"
         self.entity_id=id
         if name is None:
             name=id
         self._name=name
+        self.localtz = localtz
         if state_class == 'total_increasing':
-            self.reset = datetime.now().astimezone(localtz)
+            self.reset = datetime.now().astimezone(self.localtz)
         else:
             self.reset = False
-        self.last_update = datetime.now().astimezone(localtz)
+        self.last_update = datetime.now().astimezone(self.localtz)
         LOGGER.info("Create Sensor {0}".format(id))
 
-    @staticmethod
-    def mignight_passed(old_time : datetime) -> bool:
+    def mignight_passed(self, old_time : datetime) -> bool:
         """ did midnight pass since the last update?"""
-        LOGGER.warn(f'current time is {datetime.now().astimezone(localtz)}')
-        days = (datetime.now().astimezone(localtz).date() - old_time.date()).days
+        LOGGER.warn(f'current time is {datetime.now().astimezone(self.localtz)}')
+        days = (datetime.now().astimezone(self.localtz).date() - old_time.date()).days
         if days > 0:
             return True
         else:
@@ -95,7 +93,7 @@ class SonnenBatterieSensor(SensorEntity):
                 self._state = 0
                 LOGGER.info(f'Reset total sensor {self.name}')
             else:
-                delta_t_h = (datetime.now().astimezone(localtz) - self.last_update).total_seconds()/3600
+                delta_t_h = (datetime.now().astimezone(self.localtz) - self.last_update).total_seconds()/3600
                 try:
                     old_value = float(self._state)
                 except:
@@ -175,8 +173,9 @@ class SonnenBatterieSensor(SensorEntity):
 
 
 class SonnenBatterieMonitor:
-    def __init__(self,hass, sbInst, sensor,async_add_entities,updateIntervalSeconds,debug_mode):
+    def __init__(self,hass, sbInst, sensor,async_add_entities,updateIntervalSeconds,debug_mode,time_zone):
         self.hass=hass;
+        self.localtz = tz.gettz(time_zone)
         self.latestData={}
         self.disabledSensors=[""]
         #self.IsHybrid=False;
