@@ -91,6 +91,7 @@ class SonnenBatterieSensor(SensorEntity):
         if self.state_class == 'total_increasing':
             if self.mignight_passed(self.last_update):
                 self._state = 0
+                self.reset = datetime.now().astimezone(self.localtz)
                 LOGGER.info(f'Reset total sensor {self.name}')
             else:
                 delta_t_h = (datetime.now().astimezone(self.localtz) - self.last_update).total_seconds()/3600
@@ -441,10 +442,15 @@ class SonnenBatterieMonitor:
         """ gross consumption """
         if 'Consumption_W' in status:
             val = status['Consumption_W']
-            sensorname = allSensorsPrefix+'consumption_w'
+            sensorname = allSensorsPrefix+'house_power'
             unitname = "W"
-            friendlyname = "Current grid consumption"
+            friendlyname = "Current house consumption"
             self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.POWER)
+
+            sensorname = allSensorsPrefix+'house_energy'
+            unitname = "Wh"
+            friendlyname = "House consumption (day)"
+            self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
         """" average consumption """
         if 'Consumption_Avg' in status:
