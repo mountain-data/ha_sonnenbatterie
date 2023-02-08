@@ -1,16 +1,10 @@
-
-# pylint: disable=no-name-in-module
-from sonnenbatterie import sonnenbatterie
-# pylint: enable=no-name-in-module
 import traceback
-import logging
-import voluptuous as vol
 from homeassistant import config_entries,core
 from homeassistant.core import callback
 # pylint: disable=unused-wildcard-import
 from .const import * #
+from .sonnenbatterie_base import sonnenbatterie
 # pylint: enable=unused-wildcard-import
-import voluptuous as vol
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -25,9 +19,6 @@ class SonnenbatterieFlowHandler(config_entries.ConfigFlow,domain=DOMAIN):
         self.data_schema = CONFIG_SCHEMA_A
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        #if self._async_current_entries():
-        #    return self.async_abort(reason="single_instance_allowed")
-
         if not user_input:
             return self._show_form()
 
@@ -67,10 +58,6 @@ class SonnenbatterieFlowHandler(config_entries.ConfigFlow,domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
-        #if self._async_current_entries():
-        #    LOGGER.warning("Only one configuration of abode is allowed.")
-        #    return self.async_abort(reason="single_instance_allowed")
-
         return await self.async_step_user(import_config)
     @staticmethod
     @callback

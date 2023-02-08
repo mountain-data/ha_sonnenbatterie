@@ -47,7 +47,7 @@ async def async_setup_entry(hass, config_entry,async_add_entities):
     sensor = SonnenBatterieSensor(id="sensor.bb_{0}_{1}".format(DOMAIN,serial))
     async_add_entities([sensor])
 
-    monitor = SonnenBatterieMonitor(hass,sonnenInst, sensor, async_add_entities,updateIntervalSeconds,debug_mode, )
+    monitor = SonnenBatterieMonitor(hass,sonnenInst, sensor, async_add_entities,updateIntervalSeconds,debug_mode, time_zone= 'Europe/Berlin')
     hass.data[DOMAIN][config_entry.entry_id]={"monitor":monitor}
     monitor.start()
 
@@ -78,7 +78,7 @@ class SonnenBatterieSensor(SensorEntity):
 
     def mignight_passed(self, old_time : datetime) -> bool:
         """ did midnight pass since the last update?"""
-        LOGGER.warn(f'current time is {datetime.now().astimezone(self.localtz)}')
+        #LOGGER.warn(f'current time is {datetime.now().astimezone(self.localtz)}')
         days = (datetime.now().astimezone(self.localtz).date() - old_time.date()).days
         if days > 0:
             return True
