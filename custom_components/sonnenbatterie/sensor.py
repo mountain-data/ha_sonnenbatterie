@@ -6,6 +6,12 @@ from .const import *
 # pylint: enable=unused-wildcard-import
 import threading
 import time
+#from dateutil import tz
+#to_zone = tz.gettz('Europe/Berlin')
+
+from zoneinfo import ZoneInfo
+localtz = ZoneInfo('localtime')
+
 from homeassistant.helpers import config_validation as cv
 
 from homeassistant.components.sensor import (
@@ -65,16 +71,17 @@ class SonnenBatterieSensor(SensorEntity):
             name=id
         self._name=name
         if state_class == 'total_increasing':
-            self.reset = datetime.now()
+            self.reset = datetime.now().astimezone(localtz)
         else:
             self.reset = False
-        self.last_update = datetime.now()
+        self.last_update = datetime.now().astimezone(localtz)
         LOGGER.info("Create Sensor {0}".format(id))
 
     @staticmethod
     def mignight_passed(old_time : datetime) -> bool:
         """ did midnight pass since the last update?"""
-        days = (datetime.now().date() - old_time.date()).days
+        LOGGER.warn(f'current time is {datetime.now().astimezone(localtz)}')
+        days = (datetime.now().astimezone(localtz).date() - old_time.date()).days
         if days > 0:
             return True
         else:
@@ -86,9 +93,9 @@ class SonnenBatterieSensor(SensorEntity):
         if self.state_class == 'total_increasing':
             if self.mignight_passed(self.last_update):
                 self._state = 0
-                LOGGER.warning(f'Reset total sensor {self.name}')
+                LOGGER.info(f'Reset total sensor {self.name}')
             else:
-                delta_t_h = (datetime.now() - self.last_update).total_seconds()/3600
+                delta_t_h = (datetime.now().astimezone(localtz) - self.last_update).total_seconds()/3600
                 try:
                     old_value = float(self._state)
                 except:
