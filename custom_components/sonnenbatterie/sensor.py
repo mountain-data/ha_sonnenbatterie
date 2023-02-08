@@ -75,7 +75,6 @@ class SonnenBatterieSensor(SensorEntity):
     def mignight_passed(old_time : datetime) -> bool:
         """ did midnight pass since the last update?"""
         days = (datetime.now().date() - old_time.date()).days
-        LOGGER.warning(f'{days} days since last update')
         if days > 0:
             return True
         else:
