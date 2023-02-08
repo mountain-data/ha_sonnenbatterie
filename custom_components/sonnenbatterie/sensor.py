@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry,async_add_entities):
     serial=systemdata["DE_Ticket_Number"]
     LOGGER.info("{0} - INTERVAL: {1}".format(DOMAIN,updateIntervalSeconds))
 
-    sensor = SonnenBatterieSensor(id="sensor.{0}_{1}".format(DOMAIN,serial))
+    sensor = SonnenBatterieSensor(id="sensor.bb_{0}_{1}".format(DOMAIN,serial))
     async_add_entities([sensor])
 
     monitor = SonnenBatterieMonitor(hass,sonnenInst, sensor, async_add_entities,updateIntervalSeconds,debug_mode)
@@ -57,20 +57,46 @@ async def async_setup_entry(hass, config_entry,async_add_entities):
 
 
 class SonnenBatterieSensor(SensorEntity):
-    def __init__(self,id,name=None):
+    def __init__(self,id,name=None,state_class:str=None):
         self._attributes = {}
         self._state ="NOTRUN"
         self.entity_id=id
         if name is None:
             name=id
         self._name=name
+        if state_class == 'total_increasing':
+            self.reset = datetime.now()
+        else:
+            self.reset = False
+        self.last_update = datetime.now()
         LOGGER.info("Create Sensor {0}".format(id))
 
     def set_state(self, state):
         """Set the state."""
-        if self._state==state:
-            return
-        self._state = state
+
+        if self.state_class == 'total_increasing':
+            delta_t_h = (datetime.now() - self.last_update).total_seconds()/3600
+            try:
+                old_value = float(self._state)
+            except:
+                old_value = 0
+                LOGGER.warning(f"Old value not a number")
+
+            try:
+                new_value = float(state)
+            except:
+                new_value = 0
+                LOGGER.warning(f"New value not a number")
+
+            if new_value==0 and old_value != 0:
+                return
+            self._state = (new_value*delta_t_h) + old_value
+
+        else:
+            if self._state==state:
+                return
+            self._state = state
+
         try:
             self.schedule_update_ha_state()
         except:
@@ -232,7 +258,7 @@ class SonnenBatterieMonitor:
             #sensor.set_attributes({"unit_of_measurement":unit,"device_class":"power","friendly_name":friendlyname})
             sensor.set_state(value)
         else:
-            sensor=SonnenBatterieSensor(id,friendlyname)
+            sensor=SonnenBatterieSensor(id,friendlyname,state_class)
             sensor.set_attributes({"unit_of_measurement":unit,"device_class":device_class,"friendly_name":friendlyname,"state_class":state_class})
             self.async_add_entities([sensor])
             self.meterSensors[id]=sensor
@@ -274,164 +300,12 @@ class SonnenBatterieMonitor:
                     SensorDeviceClass.FREQUENCY
                 )
 
-            # except:
-
-        if not "inverter_ppv" in self.disabledSensors:
-            val_found = True
-            if 'ppv' in battery_system['grid_information']:
-                val=battery_system['grid_information']['ppv']
-            elif 'ppv' in inverter['status']:
-                val=inverter['status']['ppv']
-            else:
-                self.disabledSensors.append("inverter_ppv")
-                val_found = False
-                LOGGER.warning("No 'ppv' in inverter -> sensor disabled")
-                if self.debug:
-                    self.SendAllDataToLog()
-
-            if val_found:
-                self._AddOrUpdateEntity(
-                    allSensorsPrefix+"inverter_ppv",
-                    "Inverter PPV1 - Hybrid Solar Power PPV1",
-                    val,
-                    "W",
-                    SensorDeviceClass.POWER#"power"
-                )
-
-        if not "inverter_ppv2" in self.disabledSensors:
-            val_found = True
-            if 'ppv2' in battery_system['grid_information']:
-                val=battery_system['grid_information']['ppv2']
-            elif 'ppv2' in inverter['status']:
-                val=inverter['status']['ppv2']
-            else:
-                self.disabledSensors.append("inverter_ppv2")
-                val_found = False
-                LOGGER.warning("No 'ppv2' in inverter -> sensor disabled")
-                if self.debug:
-                    self.SendAllDataToLog()
-
-            if val_found:
-                self._AddOrUpdateEntity(
-                    allSensorsPrefix+"inverter_ppv2",
-                    "Inverter PPV2 - Hybrid Solar Power PPV2",
-                    val,
-                    "W",
-                    SensorDeviceClass.POWER
-                )
-
-        if not "inverter_ipv" in self.disabledSensors:
-            val_found = True
-            if 'ipv' in battery_system['grid_information']:
-                val = battery_system['grid_information']['ipv']
-            elif 'ipv' in inverter['status']:
-                val=inverter['status']['ipv']
-            else:
-                self.disabledSensors.append("inverter_ipv")
-                val_found = False
-                LOGGER.warning("No 'ipv' in inverter -> sensor disabled")
-                if self.debug:
-                    self.SendAllDataToLog()
-
-            if val_found:
-                self._AddOrUpdateEntity(
-                    allSensorsPrefix+"inverter_ipv",
-                    "Inverter IPV - Current IPV",
-                    val,
-                    "A",
-                    SensorDeviceClass.CURRENT
-                )
-
-
-        if not "inverter_ipv2" in self.disabledSensors:
-            val_found = True
-            if 'ipv2' in battery_system['grid_information']:
-                val = battery_system['grid_information']['ipv2']
-            elif 'ipv2' in inverter['status']:
-                val=inverter['status']['ipv2']
-            else:
-                self.disabledSensors.append("inverter_ipv2")
-                val_found = False
-                LOGGER.warning("No 'ipv2' in inverter -> sensor disabled")
-                if self.debug:
-                    self.SendAllDataToLog()
-
-            if val_found:
-                self._AddOrUpdateEntity(
-                    allSensorsPrefix+"inverter_ipv2",
-                    "Inverter IPV - Current IPV2",
-                    val,
-                    "A",
-                    SensorDeviceClass.CURRENT
-                )
-
-        if not "inverter_upv" in self.disabledSensors:
-            val_found = True
-            if 'upv' in battery_system['grid_information']:
-                val = battery_system['grid_information']['upv']
-            elif 'upv' in inverter['status']:
-                val=inverter['status']['upv']
-            else:
-                self.disabledSensors.append("inverter_upv")
-                val_found = False
-                LOGGER.warning("No 'upv' in inverter -> sensor disabled")
-                if self.debug:
-                    self.SendAllDataToLog()
-
-            if val_found:
-                self._AddOrUpdateEntity(
-                    allSensorsPrefix+"inverter_upv",
-                    "Inverter IPV - Voltage UPV",
-                    val,
-                    "V",
-                    SensorDeviceClass.VOLTAGE
-                )
-
-        if not "inverter_upv2" in self.disabledSensors:
-            val_found = True
-            if 'upv2' in battery_system['grid_information']:
-                val = battery_system['grid_information']['upv2']
-            elif 'upv2' in inverter['status']:
-                val=inverter['status']['upv2']
-            else:
-                self.disabledSensors.append("inverter_upv2")
-                val_found = False
-                LOGGER.warning("No 'upv2' in inverter -> sensor disabled")
-                if self.debug:
-                    self.SendAllDataToLog()
-
-            if val_found:
-                self._AddOrUpdateEntity(
-                    allSensorsPrefix+"inverter_upv2",
-                    "Inverter IPV - Voltage UPV2",
-                    val,
-                    "V",
-                    SensorDeviceClass.VOLTAGE
-                )
-
         """whatever comes next"""
         val_modulecount=int(battery_system['modules'])
         sensorname=allSensorsPrefix+"module_count"
         unitname=""
         friendlyname="Battery module count"
         self._AddOrUpdateEntity(sensorname,friendlyname,val_modulecount,unitname,SensorDeviceClass.BATTERY)
-
-        if not "tmax" in self.disabledSensors:
-            # try:
-            if "tmax" in battery_system['grid_information']:
-                val_tmax=float(battery_system['grid_information']['tmax'])
-                sensorname=allSensorsPrefix+"tmax"
-                unitname="°C"
-                friendlyname="Max Temperature"
-                self._AddOrUpdateEntity(sensorname,friendlyname,val_tmax,unitname,SensorDeviceClass.TEMPERATURE)
-            # except:
-            else:
-                self.disabledSensors.append("tmax")
-                # e = traceback.format_exc()
-                # LOGGER.error(e)
-                LOGGER.warning("No 'tmax' in grid_information -> sensor disabled")
-                if self.debug:
-                    self.SendAllDataToLog()
 
         val_module_capacity=int(battery_system['battery_system']['system']['storage_capacity_per_module'])
         sensorname=allSensorsPrefix+"module_capacity"
@@ -470,6 +344,28 @@ class SonnenBatterieMonitor:
         friendlyname="Grid In/Out Energy"
         self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
 
+        sensorname=allSensorsPrefix+"state_grid_out_energy"
+        unitname="Wh"
+        friendlyname="Grid Output Energy (sell)"
+        self._AddOrUpdateEntity(sensorname,friendlyname,val_out,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
+
+        sensorname=allSensorsPrefix+"state_grid_in_energy"
+        unitname="Wh"
+        friendlyname="Grid Input Energy (buy)"
+        self._AddOrUpdateEntity(sensorname,friendlyname,val_in,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
+
+        val=status['Production_W']
+        sensorname=allSensorsPrefix+"pv_energy_produced"
+        unitname="Wh"
+        friendlyname="PV Energy produced"
+        self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
+
+        sensorname=allSensorsPrefix+"pv_power_produced"
+        unitname="W"
+        friendlyname="PV Power produced"
+        self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY)
+
+
         """battery states"""
         """battery load percent"""
         val=status['USOC']
@@ -492,20 +388,36 @@ class SonnenBatterieMonitor:
             val_out=val
         else:
             val_in=abs(val)
-        sensorname=allSensorsPrefix+"state_battery_input"
+        sensorname=allSensorsPrefix+"battery_power_input"
         unitname="W"
-        friendlyname="Battery Charging Power"
+        friendlyname="Battery Power In"
         self._AddOrUpdateEntity(sensorname,friendlyname,val_in,unitname,SensorDeviceClass.POWER)
 
-        sensorname=allSensorsPrefix+"state_battery_output"
+        sensorname=allSensorsPrefix+"battery_power_output"
         unitname="W"
-        friendlyname="Battery Discharging Power"
+        friendlyname="Battery Power Out"
         self._AddOrUpdateEntity(sensorname,friendlyname,val_out,unitname,SensorDeviceClass.POWER)
 
-        sensorname=allSensorsPrefix+"state_battery_inout"
+        sensorname=allSensorsPrefix+"battery_power_inout"
         unitname="W"
-        friendlyname="Battery In/Out Power"
+        friendlyname="Battery Power In/Out"
         self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.POWER)
+
+        sensorname=allSensorsPrefix+"battery_energy_input"
+        unitname="Wh"
+        friendlyname="Battery Energy In"
+        self._AddOrUpdateEntity(sensorname,friendlyname,val_in,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
+
+        sensorname=allSensorsPrefix+"batterie_energy_output"
+        unitname="Wh"
+        friendlyname="Battery Energy Out"
+        self._AddOrUpdateEntity(sensorname,friendlyname,val_out,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
+
+        sensorname=allSensorsPrefix+"batterie_energy_inout"
+        unitname="Wh"
+        friendlyname="Battery Energy In/Out"
+        self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
+
 
         """ gross consumption """
         if 'Consumption_W' in status:
@@ -560,24 +472,7 @@ class SonnenBatterieMonitor:
 
         """end battery states"""
 
-        """powermeter values"""
-        for meter in meters:
-            sensornamePrefix=allSensorsPrefix+"meter_"+("{0}_{1}_{2}".format( meter['direction'],meter['deviceid'],meter['channel']))
-            sensornamePrefix=sensornamePrefix.lower()
-            generateSensorsFor={"w_l1","w_l2","w_l3","v_l1_n","v_l2_n","v_l3_n","v_l1_l2","v_l2_l3","v_l3_l1","w_total","a_l1","a_l2","a_l3"}
 
-            for sensormeter in generateSensorsFor:
-                sensorname=sensornamePrefix+"_"+sensormeter
-                val=meter[sensormeter]
-                val=round(val,2)
-                unitname=(sensormeter[0]+"").upper()
-                device_class=SensorDeviceClass.POWER
-                if(unitname=="V"):
-                    device_class=SensorDeviceClass.VOLTAGE
-                elif unitname=="A":
-                    device_class=SensorDeviceClass.CURRENT
-                friendlyname="{0} {1}".format(meter['direction'],sensormeter)
-                self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,device_class)
 
     def SendAllDataToLog(self):
         """
