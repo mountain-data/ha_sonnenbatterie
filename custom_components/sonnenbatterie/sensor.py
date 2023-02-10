@@ -92,6 +92,7 @@ class SonnenBatterieSensor(SensorEntity):
             if self.mignight_passed(self.last_update):
                 self._state = 0
                 self.reset = datetime.now().astimezone(self.localtz)
+                self.last_update = datetime.now().astimezone(self.localtz)
                 LOGGER.info(f'Reset total sensor {self.name}')
             else:
                 delta_t_h = (datetime.now().astimezone(self.localtz) - self.last_update).total_seconds()/3600
@@ -110,6 +111,7 @@ class SonnenBatterieSensor(SensorEntity):
                 if new_value==0 and old_value != 0:
                     return
                 self._state = (new_value*delta_t_h) + old_value
+                self.last_update = datetime.now().astimezone(self.localtz)
 
         else:
             if self._state==state:
