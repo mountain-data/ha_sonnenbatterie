@@ -110,7 +110,7 @@ class SonnenBatterieSensor(SensorEntity):
 
                 if new_value==0 and old_value != 0:
                     return
-                self._state = (new_value*delta_t_h) + old_value
+                self._state = round((new_value*delta_t_h) + old_value, 1)
                 self.last_update = datetime.now().astimezone(self.localtz)
 
         else:
