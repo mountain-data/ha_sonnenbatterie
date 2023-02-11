@@ -1,7 +1,5 @@
 """The Sonnenbatterie integration."""
 from .const import *
-from .sonnenbatterie_base import sonnenbatterie
-import json
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
@@ -11,7 +9,8 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL
 )
 
-
+from .sonnenbatterie_base import sonnenbatterie
+import json
 
 async def async_setup(hass, config):
     hass.data.setdefault(DOMAIN, {})

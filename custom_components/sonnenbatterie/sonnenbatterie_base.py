@@ -39,20 +39,14 @@ class sonnenbatterie:
 
         return response.json()
 
-    def get_powermeter(self):
-        return self._get("powermeter")
-
-    def get_batterysystem(self):
-        return self._get("battery_system")
-
-    def get_inverter(self):
-        return self._get("inverter")
-
     def get_systemdata(self):
         return self._get("system_data")
 
     def get_status(self):
-        return self._get("v1/status")
+        return self._get("v2/status")
 
-    def get_battery(self):
-        return self._get("battery")
+    def get_lastest_data(self):
+        return self._get("v2/latestdata")
+
+    def get_powermeter(self):
+        return self._get("v2/powermeter")
