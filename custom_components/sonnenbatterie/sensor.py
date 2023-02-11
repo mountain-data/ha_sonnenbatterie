@@ -299,7 +299,7 @@ class SonnenBatterieMonitor:
         sensorname=allSensorsPrefix+"state_grid_inout_energy"
         unitname="Wh"
         friendlyname="Grid In/Out Energy (day)"
-        self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
+        self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total')
 
         sensorname=allSensorsPrefix+"state_grid_out_energy"
         unitname="Wh"
@@ -386,7 +386,7 @@ class SonnenBatterieMonitor:
         sensorname = allSensorsPrefix+'house_energy'
         unitname = "Wh"
         friendlyname = "House consumption (day)"
-        self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total_increasing')
+        self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total')
 
         """" average consumption """
         val = status['Consumption_Avg']
