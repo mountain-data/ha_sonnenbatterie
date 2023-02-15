@@ -267,7 +267,7 @@ class SonnenBatterieMonitor:
         self._AddOrUpdateEntity(
             allSensorsPrefix+"state_netfrequency",
             "Net Frequency",
-            status['Fac'],
+            round(status['Fac'],2),
             "Hz",
             SensorDeviceClass.FREQUENCY
         )
@@ -375,6 +375,17 @@ class SonnenBatterieMonitor:
         friendlyname="Battery Energy In/Out (day)"
         self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total')
 
+        """ calculate Net consumption ex. batterie charge """
+        val = status['Consumption_W'] - val_in
+        sensorname = allSensorsPrefix+'house_power_net'
+        unitname = "W"
+        friendlyname = "Current house consumption (Net)"
+        self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.POWER)
+
+        sensorname = allSensorsPrefix+'house_energy_net'
+        unitname = "Wh"
+        friendlyname = "House consumption (day | net)"
+        self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total')
 
         """ gross consumption """
         val = status['Consumption_W']
@@ -387,6 +398,7 @@ class SonnenBatterieMonitor:
         unitname = "Wh"
         friendlyname = "House consumption (day)"
         self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY, state_class = 'total')
+
 
         """" average consumption """
         val = status['Consumption_Avg']
@@ -401,13 +413,13 @@ class SonnenBatterieMonitor:
         friendlyname="Remaining Capacity"
         self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY)
 
-        val = powermeter[0]['kwh_imported']
+        val = round(powermeter[0]['kwh_imported'],2)
         sensorname = allSensorsPrefix+'_powermeter_production_kwh_imported'
         unitname = "kWh"
         friendlyname = "Powermeter production Imported"
         self._AddOrUpdateEntity(sensorname,friendlyname,val,unitname,SensorDeviceClass.ENERGY)
 
-        val = powermeter[1]['kwh_imported']
+        val = round(powermeter[1]['kwh_imported'],2)
         sensorname = allSensorsPrefix+'_powermeter_consumption_kwh_imported'
         unitname = "kWh"
         friendlyname = "Powermeter consumption Imported"
