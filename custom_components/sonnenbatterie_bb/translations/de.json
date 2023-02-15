@@ -1,4 +1,5 @@
 {
+    "title": "Sonnenbatterie",
     "config": {
         "abort": {
             "single_instance_allowed": "Es ist nur eine einzige Konfiguration von Sonnenbatterie erlaubt."
@@ -19,14 +20,12 @@
                 },
                 "title": "Gib deine Sonnenbatterie-Anmeldeinformationen ein"
             }
-
-        },
-        "title": "Sonnenbatterie"
+        }
     },
-    "options":{
-        "step":{
-            "init":{
-                "data":{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
                     "scan_interval": "Aktualisierungsinterval(Sekunden)",
                     "time_zone": "Zeitzone",
                     "sonnenbatterie_debug": "Debug-Modus (mehr Logs)"

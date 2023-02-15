@@ -1,4 +1,5 @@
 {
+    "title": "Sonnenbatterie",
     "config": {
         "abort": {
             "single_instance_allowed": "Only one Sonnenbatterie configuration allowed."
@@ -19,14 +20,12 @@
                 },
                 "title": "Enter your Sonnenbatterie-login information"
             }
-
-        },
-        "title": "Sonnenbatterie"
+        }
     },
-    "options":{
-        "step":{
-            "init":{
-                "data":{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
                     "scan_interval": "Updateinterval(seconds)",
                     "time_zone": "Time Zone",
                     "sonnenbatterie_debug": "Debug mode (more log entries)"
