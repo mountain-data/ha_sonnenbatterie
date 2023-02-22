@@ -44,7 +44,7 @@ async def async_setup_entry(hass, config_entry,async_add_entities):
     serial=systemdata["DE_Ticket_Number"]
     LOGGER.info("{0} - INTERVAL: {1}".format(DOMAIN,updateIntervalSeconds))
 
-    sensor = SonnenBatterieSensor(id="sensor.bb_{0}_{1}".format(DOMAIN,serial))
+    sensor = SonnenBatterieSensor(id=f"sensor.bb_{DOMAIN}_{serial}")
     async_add_entities([sensor])
 
     monitor = SonnenBatterieMonitor(hass,sonnenInst, sensor, async_add_entities,updateIntervalSeconds,debug_mode, time_zone= 'Europe/Berlin')
@@ -87,10 +87,15 @@ class SonnenBatterieSensor(SensorEntity):
 
     def set_state(self, state, last_update : datetime = None):
         """Set the state."""
+        if last_update is None:
+            last_update = datetime.now().astimezone(self.localtz)
+
+        if self.last_update == last_update:
+            # we already have this update
+            return
+
 
         if self.state_class == 'total_increasing' or self.state_class == 'total':
-            if last_update is None:
-                last_update = datetime.now().astimezone(self.localtz)
             if self.mignight_passed(self.last_update):
                 self._state = 0
                 self.reset = last_update
@@ -98,11 +103,11 @@ class SonnenBatterieSensor(SensorEntity):
                 LOGGER.info(f'Reset total sensor {self.name}')
             else:
                 delta_t_h = (last_update - self.last_update).total_seconds()/3600
-                try:
-                    old_value = float(self._state)
-                except:
-                    old_value = 0
-                    LOGGER.warning(f"Old value not a number")
+                if delta_t_h < 0:
+                    # can happen if the time from the system is taken and not from the input sensor
+                    delta_t_h = 0
+
+                #LOGGER.warn(f'{last_update} > {self.last_update} > {last_update - self.last_update} > {(last_update - self.last_update).total_seconds()} > {delta_t_h}')
 
                 try:
                     new_value = float(state)
@@ -110,15 +115,28 @@ class SonnenBatterieSensor(SensorEntity):
                     new_value = 0
                     LOGGER.warning(f"New value not a number")
 
+                try:
+                    old_value = float(self._state)
+                except:
+                    LOGGER.warning(f"Old value not a number")
+                    self._state = round((new_value*delta_t_h), 1)
+                    self.last_update = last_update
+                    return
+
+
                 if new_value==0 and old_value != 0:
                     return
-                self._state = round((new_value*delta_t_h) + old_value, 1)
+                self._state = round((new_value*delta_t_h) + old_value, 4)
                 self.last_update = last_update
 
+                #LOGGER.warn(f'{last_update}|{delta_t_h}|{self.entity_id}|{self.state_class}|{state}|{self._state}')
+
         else:
+            #LOGGER.warn(f'{last_update}|N/A|{self.entity_id}|{self.state_class}|{state}|{self._state}')
             if self._state==state:
                 return
             self._state = state
+            self.last_update = last_update
 
         try:
             self.schedule_update_ha_state()
@@ -222,8 +240,7 @@ class SonnenBatterieMonitor:
 
         while not self.stopped:
             try:
-                #LOGGER.warning('Get PowerMeters: ')
-                self.updateData();
+                self.updateData()
                 self.parse()
 
                 statedisplay="standby"
@@ -234,7 +251,7 @@ class SonnenBatterieMonitor:
 
                 self.sensor.set_state(statedisplay)
                 self.AddOrUpdateEntities()
-                self.sensor.set_attributes(self.latestData["systemdata"])
+                #self.sensor.set_attributes(self.latestData["systemdata"])
             except:
                 e = traceback.format_exc()
                 LOGGER.error(e)
