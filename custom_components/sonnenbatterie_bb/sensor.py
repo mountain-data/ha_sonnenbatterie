@@ -8,8 +8,6 @@ import threading
 import time
 import pytz
 
-from homeassistant.helpers import config_validation as cv
-
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorDeviceClass
