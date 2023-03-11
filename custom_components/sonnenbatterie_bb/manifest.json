@@ -7,6 +7,7 @@
     "documentation": "https://github.com/mountain-data/ha_sonnenbatterie",
     "integration_type": "device",
     "iot_class": "local_polling",
+    "issue_tracker": "https://github.com/mountain-data/ha_sonnenbatterie/issues",
     "requirements": ["requests", "pytz"],
     "version": "2023.02.011"    
 }
