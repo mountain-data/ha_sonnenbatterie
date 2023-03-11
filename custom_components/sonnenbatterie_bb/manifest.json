@@ -1,11 +1,11 @@
 {
     "domain": "sonnenbatterie_bb",
     "name": "Sonnenbatterie BB",
-    "documentation": "https://github.com/mountain-data/ha_sonnenbatterie",
-    "dependencies": [],
     "codeowners": ["@mountain-data"],
-    "requirements": ["requests", "pytz"],
     "config_flow": true,
-    "version": "2023.02.011",
-    "iot_class": "local_polling"
+    "dependencies": [],
+    "documentation": "https://github.com/mountain-data/ha_sonnenbatterie",
+    "iot_class": "local_polling",
+    "requirements": ["requests", "pytz"],
+    "version": "2023.02.011"    
 }
