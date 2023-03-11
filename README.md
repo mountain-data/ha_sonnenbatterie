@@ -4,6 +4,8 @@ Homeassistant integration to show many stats of Sonnenbatterie
 Should work with current versions of Sonnenbatterie.
 
 [![Validate with hassfest](https://github.com/mountain-data/ha_sonnenbatterie/actions/workflows/hassfest.yaml/badge.svg)](https://github.com/mountain-data/ha_sonnenbatterie/actions/workflows/hassfest.yaml)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+
 
 ## Tested working with
 * sonnenBatterie 10 performance
