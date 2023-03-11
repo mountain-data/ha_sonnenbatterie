@@ -14,24 +14,7 @@ Should work with current versions of Sonnenbatterie.
 * sonnenBatterie 10 performance
 
 ## Important: ###
-Set the update interval in the Integration Settings. Default is 10 seconds, which may kill your recorder database
-
-### Unused/Unavailable sensors
-Depending on the software on and the oparting mode of your Sonnenbatterie some
-values may not be available. The integration does it's best to detect the absence
-of these values. If a value isn't returned by your Sonnenbatterie you will see
-entries like the following in your log:
-
-```
-… WARNING (Thread-1 (watcher)) [custom_components.sonnenbatterie] No 'ppv2' in inverter -> sensor disabled
-… WARNING (Thread-1 (watcher)) [custom_components.sonnenbatterie] No 'ipv' in inverter -> sensor disabled
-… WARNING (Thread-1 (watcher)) [custom_components.sonnenbatterie] No 'ipv2' in inverter -> sensor disabled
-… WARNING (Thread-1 (watcher)) [custom_components.sonnenbatterie] No 'upv' in inverter -> sensor disabled
-… WARNING (Thread-1 (watcher)) [custom_components.sonnenbatterie] No 'upv2' in inverter -> sensor disabled
-```
-
-Those aren't errors! There's nothing to worry about. This just tells you that
-your Sonnenbatterie doesn't provide these values.
+Set the update interval in the Integration Settings. Default is 10 seconds, I use 1 s. Might put a high load in the DB
 
 If you feel that your Sonnenbatterie **should** provide one or more of those
 you can enable the "debug_mode" from
@@ -43,4 +26,4 @@ the full data that's returned by your Sonnenbatterie in the logs. Please put tho
 logs along with the setting you want monitored into a new issue.
 
 ## Install
-Easiest way is to add this repository to hacs.
+Easiest way is to add this repository to hacs as a custom repository.
