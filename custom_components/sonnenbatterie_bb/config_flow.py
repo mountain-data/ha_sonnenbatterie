@@ -4,6 +4,7 @@ from homeassistant.core import callback
 # pylint: disable=unused-wildcard-import
 from .const import * #
 from .sonnenbatterie_base import sonnenbatterie
+from homeassistant.helpers import config_validation as cv
 # pylint: enable=unused-wildcard-import
 from homeassistant.const import (
     CONF_PASSWORD,
