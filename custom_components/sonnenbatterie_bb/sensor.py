@@ -8,6 +8,9 @@ import threading
 import time
 import pytz
 
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
+
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorDeviceClass
@@ -42,10 +45,18 @@ async def async_setup_entry(hass, config_entry,async_add_entities):
     serial=systemdata["DE_Ticket_Number"]
     LOGGER.info("{0} - INTERVAL: {1}".format(DOMAIN,updateIntervalSeconds))
 
-    sensor = SonnenBatterieSensor(id=f"sensor.bb_{DOMAIN}_{serial}")
+    device = {
+        "identifiers": {(DOMAIN, config_entry.unique_id)},
+        "name": config_entry.title,
+        "manufacturer": "Sonnenbatterie",
+        "model": f"Batterie {serial}",
+        "entry_type": None
+    }
+
+    sensor = SonnenBatterieSensor(id=f"sensor.bb_{DOMAIN}_{serial}", device = device, name = f'Sonnenbatterie {serial}')
     async_add_entities([sensor])
 
-    monitor = SonnenBatterieMonitor(hass,sonnenInst, sensor, async_add_entities,updateIntervalSeconds,debug_mode, time_zone= 'Europe/Berlin')
+    monitor = SonnenBatterieMonitor(hass,sonnenInst, sensor, async_add_entities,updateIntervalSeconds,debug_mode, time_zone= 'Europe/Berlin', device = device)
     hass.data[DOMAIN][config_entry.entry_id]={"monitor":monitor}
     monitor.start()
 
@@ -59,13 +70,16 @@ async def async_setup_entry(hass, config_entry,async_add_entities):
 
 
 class SonnenBatterieSensor(SensorEntity):
-    def __init__(self,id,name=None,state_class:str=None, localtz = pytz.timezone('Europe/Berlin')):
+    def __init__(self,id,name=None,state_class:str=None,
+                 localtz = pytz.timezone('Europe/Berlin'),
+                 device: DeviceInfo = None):
         self._attributes = {}
         self._state ="NOTRUN"
         self.entity_id=id
         if name is None:
             name=id
         self._name=name
+        self._device: DeviceInfo = device
         self.localtz = localtz
         if state_class == 'total_increasing':
             self.reset = datetime.now().astimezone(self.localtz)
@@ -147,6 +161,11 @@ class SonnenBatterieSensor(SensorEntity):
         self._attributes = attributes
 
     @property
+    def device_info(self) -> DeviceInfo:
+        """Device info."""
+        return self._device
+
+    @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
         return self.entity_id
@@ -194,8 +213,17 @@ class SonnenBatterieSensor(SensorEntity):
 
 
 class SonnenBatterieMonitor:
-    def __init__(self,hass, sbInst, sensor,async_add_entities,updateIntervalSeconds,debug_mode,time_zone):
+    def __init__(self,
+                 hass,
+                 sbInst,
+                 sensor,
+                 async_add_entities,
+                 updateIntervalSeconds,
+                 debug_mode,
+                 time_zone,
+                 device: DeviceInfo = None):
         self.hass=hass;
+        self._device: DeviceInfo = device
         self.localtz = pytz.timezone('Europe/Berlin')
         self.latestData={}
         self.disabledSensors=[""]
@@ -233,6 +261,11 @@ class SonnenBatterieMonitor:
         self.updateData();
         self.AddOrUpdateEntities()
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Device info."""
+        return self._device
+
     def watcher(self):
         LOGGER.info('Start Watcher Thread:')
 
@@ -266,7 +299,7 @@ class SonnenBatterieMonitor:
             sensor=self.meterSensors[id]
             sensor.set_state(value, self.last_update)
         else:
-            sensor=SonnenBatterieSensor(id,friendlyname,state_class)
+            sensor=SonnenBatterieSensor(id,friendlyname,state_class, device=self._device)
             sensor.set_attributes({"unit_of_measurement":unit,"device_class":device_class,"friendly_name":friendlyname,"state_class":state_class})
             self.async_add_entities([sensor])
             self.meterSensors[id]=sensor
