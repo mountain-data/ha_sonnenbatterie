@@ -97,12 +97,12 @@ class SonnenBatterieSensor(SensorEntity):
         else:
             return False
 
-    def set_state(self, state, last_update : datetime = None):
+    def set_state(self, state, new_update : datetime = None):
         """Set the state."""
-        if last_update is None:
-            last_update = datetime.now().astimezone(self.localtz)
+        if new_update is None:
+            new_update = datetime.now().astimezone(self.localtz)
 
-        if self.last_update == last_update:
+        if self.last_update == new_update:
             # we already have this update
             return
 
@@ -110,16 +110,17 @@ class SonnenBatterieSensor(SensorEntity):
         if self.state_class == 'total_increasing' or self.state_class == 'total':
             if self.mignight_passed(self.last_update):
                 self._state = 0
-                self.reset = last_update
-                self.last_update = last_update
+                self.reset = new_update
+                self.last_update = new_update
                 LOGGER.info(f'Reset total sensor {self.name}')
             else:
-                delta_t_h = (last_update - self.last_update).total_seconds()/3600
+                # get time delta in hours
+                delta_t_h = (new_update - self.last_update).total_seconds()/3600
                 if delta_t_h < 0:
                     # can happen if the time from the system is taken and not from the input sensor
                     delta_t_h = 0
 
-                #LOGGER.warn(f'{last_update} > {self.last_update} > {last_update - self.last_update} > {(last_update - self.last_update).total_seconds()} > {delta_t_h}')
+                #LOGGER.warn(f'{new_update} > {self.last_update} > {new_update - self.last_update} > {(new_update - self.last_update).total_seconds()} > {delta_t_h}')
 
                 try:
                     new_value = float(state)
@@ -132,23 +133,26 @@ class SonnenBatterieSensor(SensorEntity):
                 except:
                     LOGGER.warning(f"Old value not a number")
                     self._state = round((new_value*delta_t_h), 1)
-                    self.last_update = last_update
-                    return
+                    self.last_update = new_update
+                    old_value = None
 
-
+                # do we have something to add to the value?
                 if new_value==0 and old_value != 0:
                     return
-                self._state = round((new_value*delta_t_h) + old_value, 4)
-                self.last_update = last_update
 
-                #LOGGER.warn(f'{last_update}|{delta_t_h}|{self.entity_id}|{self.state_class}|{state}|{self._state}')
+                # check if we had a valid old value
+                if old_value is not None:
+                    self._state = round((new_value*delta_t_h) + old_value, 1)
+                    self.last_update = new_update
+
+                #LOGGER.warn(f'{new_update}|{delta_t_h}|{self.entity_id}|{self.state_class}|{state}|{self._state}')
 
         else:
-            #LOGGER.warn(f'{last_update}|N/A|{self.entity_id}|{self.state_class}|{state}|{self._state}')
+            #LOGGER.warn(f'{new_update}|N/A|{self.entity_id}|{self.state_class}|{state}|{self._state}')
             if self._state==state:
                 return
             self._state = state
-            self.last_update = last_update
+            self.last_update = new_update
 
         try:
             self.schedule_update_ha_state()
