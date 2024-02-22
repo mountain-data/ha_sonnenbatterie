@@ -31,6 +31,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 ATTR_SONNEN_DEBUG = "sonnenbatterie_debug"
 DEFAULT_SONNEN_DEBUG = False
+PLATFORMS = ["sensor"]
 
 def flattenObj(prefix,seperator,obj):
     result={}

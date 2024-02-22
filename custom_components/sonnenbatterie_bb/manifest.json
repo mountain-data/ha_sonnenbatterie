@@ -9,5 +9,5 @@
     "iot_class": "local_polling",
     "issue_tracker": "https://github.com/mountain-data/ha_sonnenbatterie/issues",
     "requirements": ["requests", "pytz"],
-    "version": "2023.4.4"
+    "version": "2024.2.22"
 }
