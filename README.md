@@ -12,7 +12,7 @@ Homeassistant integration to show many stats of a Sonnenbatterie. Should work wi
 * sonnenBatterie 10 performance
 
 ## Important: ###
-Set the update interval in the Integration Settings. Default is 10 seconds, I use 1 s. Might put a high load in the DB
+Set the update interval in the Integration Settings. Default is 10 seconds, I use 2 s. Might put a high load in the DB
 
 If you feel that your Sonnenbatterie **should** provide one or more of those
 you can enable the "debug_mode" from
